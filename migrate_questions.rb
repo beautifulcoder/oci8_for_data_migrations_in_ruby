@@ -2,9 +2,11 @@ require 'oci8'
 
 QUESTION_TYPE_IDS = { "CHK" => 1, "MLT" => 2 }
 
-src = OCI8.new('eadvisor/ZwKLXfL_lY5guMZ@explt')
-tgt = OCI8.new('eadvisor/ZwKLXfL_lY5guMZ@explt')
+src = OCI8.new('username/password@instance')
+tgt = OCI8.new('username/password@instance')
+
 tgt.autocommit = true
+
 src.exec("SELECT question_id,
             (
               SELECT answer.answer_type
@@ -16,6 +18,7 @@ src.exec("SELECT question_id,
             placement,
             updt_date
           FROM question") do |qr|
+
   tgt.exec("SELECT questions_seq.nextval FROM dual") do |qid|
     tgt.exec("INSERT INTO questions (
                 id,
@@ -39,12 +42,14 @@ src.exec("SELECT question_id,
       qr[2].to_s[0..30],
       qr[4].to_date,
       qr[4].to_date)
+
     src.exec("SELECT answer_id,
                 answer_sequence,
                 answer_text,
                 updt_date
               FROM answer
               WHERE question_id = :1", qr[0].to_i) do |ar|
+
       tgt.exec("SELECT answers_seq.nextval FROM dual") do |aid|
         tgt.exec("INSERT INTO answers (
                     id,
@@ -72,5 +77,6 @@ src.exec("SELECT question_id,
     end
   end
 end
+
 src.logoff
 tgt.logoff
